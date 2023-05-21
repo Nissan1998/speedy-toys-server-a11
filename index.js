@@ -23,27 +23,39 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const db = client.db("speedyToys");
     const toysCollection = db.collection("toys");
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
-    app.post("/addToy", async (req, res) => {
-      const body = await req.body;
-      const result = await toysCollection.insertOne(body);
-      if (!body) {
-        return res.status(403).send({ message: "body data not found" });
-      }
-      res.send(result);
-      console.log(result);
-    });
 
     app.get("/alltoys", async (req, res) => {
       const result = await toysCollection.find({}).limit(20).toArray();
       res.send(result);
+    });
+
+    app.get("/categories", async (req, res) => {
+      const result = await toysCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    app.get("/myToys/:email", async (req, res) => {
+      const email = req.params.email;
+      const result = await toysCollection
+        .find({ sellerEmail: email })
+        .toArray();
+      console.log(email);
+      res.send(result);
+    });
+
+    app.post("/addtoy", async (req, res) => {
+      const body = req.body;
+      const result = await toysCollection.insertOne(body);
+      res.send(result);
+      console.log(result);
     });
   } finally {
     // Ensures that the client will close when you finish/error
