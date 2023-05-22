@@ -32,6 +32,22 @@ async function run() {
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
 
+    app.put("/updateToy/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updatedToy = req.body;
+      const toy = {
+        $set: {
+          price: updatedToy.price,
+          quantity: updatedToy.quantity,
+          description: updatedToy.description,
+        },
+      };
+      const result = await toysCollection.updateOne(filter, toy, options);
+      res.send(result);
+    });
+
     app.get("/alltoys", async (req, res) => {
       const result = await toysCollection.find({}).limit(20).toArray();
       res.send(result);
@@ -44,8 +60,11 @@ async function run() {
 
     app.get("/myToys/:email", async (req, res) => {
       const email = req.params.email;
+      const sort = req.query.sort;
+
       const result = await toysCollection
         .find({ sellerEmail: email })
+        .sort({ price: sort === "asc" ? 1 : -1 })
         .toArray();
       console.log(email);
       res.send(result);
